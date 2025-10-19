@@ -2,6 +2,7 @@
 
 use crate::types::common::{LettaId, Timestamp};
 use bon::Builder;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 /// Message role.
@@ -969,3 +970,86 @@ pub enum UpdateAssistantMessageContent {
 }
 
 // Note: Async message/job types (Run, JobStatus, JobType) have been moved to types/runs.rs
+
+/// Request to cancel agent runs.
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct CancelAgentRunRequest {
+    /// Optional list of run IDs to cancel.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub run_ids: Option<Vec<String>>,
+}
+
+/// Search mode for message search.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum MessageSearchMode {
+    /// Vector search only.
+    Vector,
+    /// Full-text search only.
+    Fts,
+    /// Hybrid search combining vector and FTS.
+    Hybrid,
+}
+
+impl Default for MessageSearchMode {
+    fn default() -> Self {
+        Self::Hybrid
+    }
+}
+
+/// Request for searching messages across organization.
+#[derive(Debug, Clone, Serialize, Deserialize, Default, Builder)]
+pub struct MessageSearchRequest {
+    /// Text query for full-text search.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub query: Option<String>,
+
+    /// Search mode to use.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub search_mode: Option<MessageSearchMode>,
+
+    /// Filter messages by role.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub roles: Option<Vec<MessageRole>>,
+
+    /// Filter messages by project ID.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub project_id: Option<String>,
+
+    /// Filter messages by template ID.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub template_id: Option<String>,
+
+    /// Maximum number of results to return (1-100, default: 50).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub limit: Option<i32>,
+
+    /// Filter messages created after this date.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub start_date: Option<DateTime<Utc>>,
+
+    /// Filter messages created on or before this date.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub end_date: Option<DateTime<Utc>>,
+}
+
+/// Result from a message search operation with scoring details.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MessageSearchResult {
+    /// The embedded content (LLM-friendly).
+    pub embedded_text: String,
+
+    /// The raw message object.
+    pub message: LettaMessageUnion,
+
+    /// Full-text search rank position if FTS was used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fts_rank: Option<i32>,
+
+    /// Vector search rank position if vector search was used.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub vector_rank: Option<i32>,
+
+    /// Reciprocal Rank Fusion combined score.
+    pub rrf_score: f64,
+}

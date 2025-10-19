@@ -6,7 +6,7 @@
 
 use crate::client::LettaClient;
 use crate::error::LettaResult;
-use crate::types::file::{AgentFile, PaginatedAgentFiles};
+use crate::types::file::PaginatedAgentFiles;
 use crate::types::LettaId;
 
 /// File session API operations for agents.

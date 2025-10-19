@@ -298,6 +298,118 @@ impl<'a> MessageApi<'a> {
             .await
     }
 
+    /// Cancel agent runs.
+    ///
+    /// Cancels runs associated with an agent. If run_ids are provided, cancels those specific runs.
+    /// Note: To cancel active runs, Redis is required.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent whose runs to cancel
+    /// * `request` - Optional request specifying which runs to cancel
+    ///
+    /// # Returns
+    ///
+    /// A JSON response object confirming the cancellation.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [crate::error::LettaError] if the request fails or if the response cannot be parsed.
+    pub async fn cancel(
+        &self,
+        agent_id: &LettaId,
+        request: Option<crate::types::CancelAgentRunRequest>,
+    ) -> LettaResult<serde_json::Value> {
+        self.client
+            .post(
+                &format!("v1/agents/{}/messages/cancel", agent_id),
+                &request.unwrap_or_default(),
+            )
+            .await
+    }
+
+    /// Preview the raw LLM request payload without sending it.
+    ///
+    /// This endpoint processes the message through the agent loop up until the LLM request,
+    /// then returns the raw request payload that would be sent to the LLM provider.
+    /// Useful for debugging and inspection.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent to preview messages for
+    /// * `request` - The message creation request with messages and options
+    ///
+    /// # Returns
+    ///
+    /// A JSON object containing the raw LLM request payload.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [crate::error::LettaError] if the request fails or if the response cannot be parsed.
+    pub async fn preview(
+        &self,
+        agent_id: &LettaId,
+        request: CreateMessagesRequest,
+    ) -> LettaResult<serde_json::Value> {
+        self.client
+            .post(
+                &format!("v1/agents/{}/messages/preview-raw-payload", agent_id),
+                &request,
+            )
+            .await
+    }
+
+    /// Search messages across the entire organization.
+    ///
+    /// Returns messages with FTS/vector ranks and total RRF score.
+    /// This is a cloud-only feature.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The search request with query and filters
+    ///
+    /// # Returns
+    ///
+    /// A vector of [`crate::types::MessageSearchResult`] containing matching messages with scores.
+    ///
+    /// # Errors
+    ///
+    /// Returns a [crate::error::LettaError] if the request fails or if the response cannot be parsed.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # use letta::types::{MessageSearchRequest, MessageSearchMode, MessageRole};
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// # let client = letta::LettaClient::new(
+    /// #     letta::client::ClientConfig::new("http://localhost:8283")?
+    /// # )?;
+    /// let results = client
+    ///     .messages()
+    ///     .search(MessageSearchRequest {
+    ///         query: Some("error handling".to_string()),
+    ///         search_mode: Some(MessageSearchMode::Hybrid),
+    ///         roles: Some(vec![MessageRole::User, MessageRole::Assistant]),
+    ///         limit: Some(10),
+    ///         ..Default::default()
+    ///     })
+    ///     .await?;
+    ///
+    /// for result in results {
+    ///     println!("Message: {} (RRF: {})", result.embedded_text, result.rrf_score);
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn search(
+        &self,
+        request: crate::types::MessageSearchRequest,
+    ) -> LettaResult<Vec<crate::types::MessageSearchResult>> {
+        self.client
+            .post("v1/agents/messages/search", &request)
+            .await
+    }
+
     /// List messages with pagination support.
     ///
     /// Returns a stream that automatically fetches subsequent pages as needed.
