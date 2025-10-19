@@ -189,6 +189,11 @@ impl LettaClient {
         crate::api::BlocksApi::new(self)
     }
 
+    /// Get the folders API.
+    pub fn folders(&self) -> crate::api::FolderApi<'_> {
+        crate::api::FolderApi::new(self)
+    }
+
     /// Get the retry configuration.
     pub fn retry_config(&self) -> &RetryConfig {
         &self.retry_config

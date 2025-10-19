@@ -6,6 +6,8 @@
 pub mod agents;
 pub mod batch;
 pub mod blocks;
+pub mod files;
+pub mod folders;
 pub mod groups;
 pub mod health;
 pub mod identities;
@@ -28,6 +30,8 @@ pub mod voice;
 pub use agents::AgentApi;
 pub use batch::BatchApi;
 pub use blocks::BlocksApi;
+pub use files::AgentFileApi;
+pub use folders::{AgentFolderApi, FolderApi};
 pub use groups::GroupApi;
 pub use health::HealthApi;
 pub use identities::IdentitiesApi;

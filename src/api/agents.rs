@@ -106,6 +106,86 @@ impl<'a> AgentApi<'a> {
             .await
     }
 
+    /// Update an existing agent.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent to update
+    /// * `request` - The update request with fields to modify
+    ///
+    /// # Errors
+    ///
+    /// Returns a [crate::error::LettaError] if the request fails or if the response cannot be parsed.
+    pub async fn update(
+        &self,
+        agent_id: &LettaId,
+        request: crate::types::UpdateAgentRequest,
+    ) -> LettaResult<AgentState> {
+        self.client
+            .patch(&format!("v1/agents/{}", agent_id), &request)
+            .await
+    }
+
+    /// Get context window information for an agent.
+    ///
+    /// Returns information about the agent's context window usage.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent
+    ///
+    /// # Errors
+    ///
+    /// Returns a [crate::error::LettaError] if the request fails or if the response cannot be parsed.
+    pub async fn get_context(&self, agent_id: &LettaId) -> LettaResult<serde_json::Value> {
+        self.client
+            .get(&format!("v1/agents/{}/context", agent_id))
+            .await
+    }
+
+    /// Reset an agent's message history.
+    ///
+    /// This clears all conversation messages for the agent.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent whose messages to reset
+    ///
+    /// # Errors
+    ///
+    /// Returns a [crate::error::LettaError] if the request fails.
+    pub async fn reset_messages(&self, agent_id: &LettaId) -> LettaResult<()> {
+        self.client
+            .post(
+                &format!("v1/agents/{}/reset-messages", agent_id),
+                &serde_json::json!({}),
+            )
+            .await
+            .map(|_: serde_json::Value| ())
+    }
+
+    /// Get file session API for this agent.
+    ///
+    /// Returns an API instance for managing files in the agent's session.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent
+    pub fn files(&self, agent_id: LettaId) -> crate::api::AgentFileApi {
+        crate::api::AgentFileApi::new(self.client, agent_id)
+    }
+
+    /// Get folder API for this agent.
+    ///
+    /// Returns an API instance for managing folder attachments.
+    ///
+    /// # Arguments
+    ///
+    /// * `agent_id` - The ID of the agent
+    pub fn folders(&self, agent_id: LettaId) -> crate::api::AgentFolderApi {
+        crate::api::AgentFolderApi::new(self.client, agent_id)
+    }
+
     /// Summarize an agent's conversation history to a target message length.
     ///
     /// This endpoint summarizes the current message history for a given agent,

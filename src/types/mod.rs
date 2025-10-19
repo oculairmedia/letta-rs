@@ -6,6 +6,8 @@
 pub mod agent;
 pub mod batch;
 pub mod common;
+pub mod file;
+pub mod folder;
 pub mod groups;
 pub mod health;
 pub mod identity;
@@ -26,6 +28,8 @@ pub mod voice;
 pub use agent::*;
 pub use batch::*;
 pub use common::*;
+pub use file::*;
+pub use folder::*;
 pub use groups::*;
 pub use health::*;
 pub use identity::*;
