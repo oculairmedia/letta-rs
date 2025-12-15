@@ -469,6 +469,36 @@ pub enum ToolRule {
         #[serde(skip_serializing_if = "Option::is_none")]
         prompt_template: Option<String>,
     },
+    /// Requires approval tool rule.
+    #[serde(rename = "requires_approval")]
+    RequiresApproval {
+        /// Tool name this rule applies to.
+        tool_name: String,
+        /// Optional prompt template.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        prompt_template: Option<String>,
+    },
+    /// Run first tool rule.
+    #[serde(rename = "run_first")]
+    RunFirst {
+        /// Tool name this rule applies to.
+        tool_name: String,
+        /// Optional prompt template.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        prompt_template: Option<String>,
+    },
+    /// Default on empty tool rule.
+    #[serde(rename = "default_on_empty")]
+    DefaultOnEmpty {
+        /// Tool name this rule applies to.
+        tool_name: String,
+        /// Optional prompt template.
+        #[serde(skip_serializing_if = "Option::is_none")]
+        prompt_template: Option<String>,
+    },
+    /// Unknown tool rule variant (catches new/unknown types).
+    #[serde(other)]
+    Unknown,
 }
 
 /// Conditional tool rule configuration.
@@ -612,6 +642,15 @@ impl ToolRule {
             }
             | Self::Init {
                 prompt_template, ..
+            }
+            | Self::RequiresApproval {
+                prompt_template, ..
+            }
+            | Self::RunFirst {
+                prompt_template, ..
+            }
+            | Self::DefaultOnEmpty {
+                prompt_template, ..
             } => {
                 *prompt_template = Some(template.into());
             }
@@ -619,6 +658,9 @@ impl ToolRule {
                 prompt_template, ..
             } => {
                 *prompt_template = Some(template.into());
+            }
+            Self::Unknown => {
+                // Unknown variants cannot have prompt templates set
             }
         }
         self
